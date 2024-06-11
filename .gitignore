@@ -5,4 +5,5 @@
 *.Rproj
 /Presentation/*
 !/Presentation/Presentation.html
-!/PResentation/Presentation.qmd
+!/Presentation/Presentation.qmd
+!/Presentation/Presentation.pdf
