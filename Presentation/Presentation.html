@@ -11,7 +11,7 @@
   <meta name="generator" content="quarto-1.3.433">
 
   <meta name="author" content="Etienne Caprioli">
-  <meta name="dcterms.date" content="2024-06-10">
+  <meta name="dcterms.date" content="2024-06-11">
   <title>Changepoint detection</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -30,6 +30,71 @@
       margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
       vertical-align: middle;
     }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
     /* CSS for citations */
     div.csl-bib-body { }
     div.csl-entry {
@@ -363,7 +428,7 @@ Etienne Caprioli
     </div>
 </div>
 
-  <p class="date">June 10, 2024</p>
+  <p class="date">June 11, 2024</p>
 </section>
 <section class="slide level2">
 
@@ -521,7 +586,7 @@ C_\tau = \sqrt{\frac{\tau(n-\tau)}{n}}\left| \bar X_{1:\tau} - \bar X_{\tau + 1:
 <p><strong>How to choose the threshold <span class="math inline">\(c\)</span>?</strong></p>
 </div>
 <div class="callout-content">
-<p>Some theoretical results that ensure that the false positive rate tends to <span class="math inline">\(0\)</span> as <span class="math inline">\(n \to \infty\)</span> suggest that the threshold should be set to <span class="math inline">\(c = 2\log \log n\)</span>. However, this threshold can appear be to be quite conservative in some applications, and some papers suggest to use <span class="math inline">\(c = 2 \log n\)</span> instead.</p>
+<p>Some theoretical results that ensure that the false positive rate tends to <span class="math inline">\(0\)</span> as <span class="math inline">\(n \to \infty\)</span> suggest that the threshold should be set to at least <span class="math inline">\(c = 2\log n\)</span>. However, this threshold can appear be to be quite conservative in some applications, and some papers suggest to use <span class="math inline">\(c = 2 \log \log n\)</span> instead.</p>
 </div>
 </div>
 </div>
@@ -712,7 +777,7 @@ f(\tau_1, \dots, \tau_q|X_1, \dots, X_n) = \sum_{j=1}^{q+1} c_{\tau_{j-1}, \tau_
 \]</span></p>
 <p>Let us assume that <span class="math inline">\(\beta(q) = \lambda q\)</span> where <span class="math inline">\(\lambda\)</span> is a constant. We can therefore write the minimisation problem above as</p>
 <p><span class="math display">\[
-Q_{n, \lambda}(q; \tau_1, \dots, \tau_q) = \sum_{j=1}^{q+1}c_{\tau_{j-1}, \tau_j}(X_{1:n})j) +q\lambda
+Q_{n, \lambda}(q; \tau_1, \dots, \tau_q) = \sum_{j=1}^{q+1}c_{\tau_{j-1}, \tau_j}(X_{1:n}) +q\lambda
 \]</span></p>
 </section>
 <section id="what-are-we-interested-in-8" class="slide level2">
@@ -722,7 +787,7 @@ Q_{n, \lambda}(q; \tau_1, \dots, \tau_q) = \sum_{j=1}^{q+1}c_{\tau_{j-1}, \tau_j
 <p>Now denote</p>
 <p><span class="math display">\[
 Q_{t, \lambda} = \underset{q; ~\tau_1 &lt; \dots &lt; \tau_q &lt;t}{\min} ~\sum_{j=1}^{q}c_{\tau_{j-1}, \tau_j}(X_{1:n}) + c_{\tau_{q}, t}(X_{1:n}) + q\lambda
-\]</span> This can be interpreted as the minimum segmentation cost of the time series between times <span class="math inline">\(0\)</span> and <span class="math inline">\(t\)</span>. It can be be rewritten:</p>
+\]</span> This can be interpreted as the <span class="bg" style="--col: #D78484">minimum segmentation cost</span> of the time series between times <span class="math inline">\(0\)</span> and <span class="math inline">\(t\)</span>. It can be be rewritten:</p>
 <p><span class="math display">\[
 Q_{t, \lambda} = \min \left\{ c_{0, t}(X_{1:n}), \underset{\tau = 1, \dots, t-1}{\min} Q_{\tau, \lambda} + c_{\tau, t}(X_{1:n}) + \lambda \right\}
 \]</span> Which simplifies further if we set <span class="math inline">\(Q_{0, \lambda} = -\lambda\)</span> (this value is arbitrary as it represents the minimum segmenting cost of the series between <span class="math inline">\(0\)</span> and <span class="math inline">\(0\)</span>):</p>
@@ -734,7 +799,7 @@ Q_{t, \lambda} = \underset{\tau = 1, \dots, t-1}{\min} Q_{\tau, \lambda} + c_{\t
 <h2>What are we interested in ?</h2>
 <h3 id="multiple-changepoints-7">Multiple changepoints</h3>
 <h4 id="optimal-partitionning-2">Optimal partitionning</h4>
-<p>This last expression has a recursive structure that one can exploit to solve this minimisation problem and estimate the changepoints <span class="math inline">\((\hat \tau_j)_j\)</span> and their number <span class="math inline">\(q\)</span>:</p>
+<p>This last expression has a recursive structure that one can exploit to solve this minimisation problem and estimate the changepoints <span class="math inline">\((\hat \tau_j)_j\)</span> and their number <span class="math inline">\(\hat q\)</span>:</p>
 <p><span class="math display">\[
 \hat \tau_1 = \underset{\tau = 0, \dots, n-1}{\text{argmin}} Q_{\tau, \lambda} + c_{\tau, n}(X_{1:n}) + \lambda
 \]</span> And then</p>
@@ -786,7 +851,12 @@ p(r_t | X_{1:t}) = \frac{p(r_t, X_{1:t})}{\sum_{r_{t'}} p(r_{t'}, X_{1:t})}
 <h3 id="bayesian-online-changepoint-detection-1">Bayesian online changepoint detection</h3>
 <div class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display">
-<p><img data-src="Presentation_files/figure-revealjs/cell-3-output-1.png" width="818" height="579"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="Presentation_files/figure-revealjs/cell-3-output-1.png" width="811" height="505"></p>
+<figcaption>Example of mean changepoint detection with the BOCD algorithm. The bottom plot represent the posterior probability distribution of <span class="math inline">\(r_t\)</span>.</figcaption>
+</figure>
+</div>
 </div>
 </div>
 </section></section>
@@ -800,7 +870,12 @@ p(r_t | X_{1:t}) = \frac{p(r_t, X_{1:t})}{\sum_{r_{t'}} p(r_{t'}, X_{1:t})}
 <h3 id="well-log">Well log</h3>
 <div class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
 <p><img data-src="Presentation_files/figure-revealjs/cell-4-output-1.png" width="824" height="411"></p>
+<figcaption>Material response vs depth during an oil well drilling. This type of data is used to analyse the soil and determine what is the best depth and orientation for the forage.</figcaption>
+</figure>
+</div>
 </div>
 </div>
 </section>
@@ -809,15 +884,160 @@ p(r_t | X_{1:t}) = \frac{p(r_t, X_{1:t})}{\sum_{r_{t'}} p(r_{t'}, X_{1:t})}
 <h3 id="dow-jones-industrial-average">Dow Jones Industrial Average</h3>
 <div class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display">
-<p><img data-src="Presentation_files/figure-revealjs/cell-5-output-1.png" width="809" height="402"></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="Presentation_files/figure-revealjs/cell-5-output-1.png" width="813" height="402"></p>
+<figcaption>Daily returns of the Dow Jones Industrial Average index between 1970 and 2000. This can be one building block for market risk monitoring.</figcaption>
+</figure>
+</div>
 </div>
 </div>
 </section>
 <section id="application-in-risk-monitoring-in-finance" class="slide level2">
 <h2>Application in risk monitoring in Finance</h2>
+<h3 id="dataset">Dataset</h3>
+<p>To monitor financial markets and potentially take action to protect financial stability, trading venues monitor the volatility of the different stock index, to do so, they need some sort of <em>online</em> changepoint detection.</p>
+<div class="cell" data-execution_count="5">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="Presentation_files/figure-revealjs/cell-6-output-1.png" width="792" height="411"></p>
+<figcaption>Example of variance changepoint dataset. Between the 2 changepoint, the variance is 3 times higher than the rest of the series.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="application-in-risk-monitoring-in-finance-1" class="slide level2">
+<h2>Application in risk monitoring in Finance</h2>
+<h3 id="changepoint-algorithm">Changepoint algorithm</h3>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">def</span> BOCD_var(signal, alpha0, beta0, hazard_prob, mu <span class="op">=</span> <span class="dv">0</span>):</span>
+<span id="cb1-2"><a href="#cb1-2"></a></span>
+<span id="cb1-3"><a href="#cb1-3"></a>    <span class="co"># Initialisation</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a>    T <span class="op">=</span> <span class="bu">len</span>(signal)</span>
+<span id="cb1-5"><a href="#cb1-5"></a>    log_R <span class="op">=</span> <span class="op">-</span>np.inf <span class="op">*</span> np.ones((T<span class="op">+</span><span class="dv">1</span>, T<span class="op">+</span><span class="dv">1</span>)) <span class="co"># Run length posterior log-probability matrix</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a>    log_R[<span class="dv">0</span>, <span class="dv">0</span>] <span class="op">=</span> <span class="dv">0</span> <span class="co"># At time 0, the posterior proability is initialised to 1 at R = 0</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a></span>
+<span id="cb1-8"><a href="#cb1-8"></a>    posterior_precision <span class="op">=</span> np.nan <span class="op">*</span> np.empty(T) <span class="co"># Mean of the posterior distribution of the precision</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a></span>
+<span id="cb1-10"><a href="#cb1-10"></a></span>
+<span id="cb1-11"><a href="#cb1-11"></a>    log_message <span class="op">=</span> np.array([<span class="dv">0</span>]) <span class="co"># message initialised at 1</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a>    log_H <span class="op">=</span> np.log(hazard_prob) <span class="co"># Constant prior on changepoint probability.</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a>    log_1_minus_H <span class="op">=</span> np.log(<span class="dv">1</span><span class="op">-</span>hazard_prob)</span>
+<span id="cb1-14"><a href="#cb1-14"></a></span>
+<span id="cb1-15"><a href="#cb1-15"></a>    <span class="co"># Prior's parameters for the previous data point</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a>    prior_shape <span class="op">=</span> np.array([alpha0])</span>
+<span id="cb1-17"><a href="#cb1-17"></a>    prior_rate <span class="op">=</span> np.array([beta0]) </span>
+<span id="cb1-18"><a href="#cb1-18"></a></span>
+<span id="cb1-19"><a href="#cb1-19"></a></span>
+<span id="cb1-20"><a href="#cb1-20"></a>    <span class="co"># Online posterior distribution of the run length update:</span></span>
+<span id="cb1-21"><a href="#cb1-21"></a>    <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, T<span class="op">+</span><span class="dv">1</span>):</span>
+<span id="cb1-22"><a href="#cb1-22"></a>        x <span class="op">=</span> signal[t<span class="op">-</span><span class="dv">1</span>] <span class="co"># Reading the new data point</span></span>
+<span id="cb1-23"><a href="#cb1-23"></a></span>
+<span id="cb1-24"><a href="#cb1-24"></a>        <span class="co"># Posterior mean for the precision</span></span>
+<span id="cb1-25"><a href="#cb1-25"></a>        posterior_precision[t<span class="op">-</span><span class="dv">1</span>] <span class="op">=</span> prior_shape[t<span class="op">-</span><span class="dv">1</span>]<span class="op">/</span>prior_rate[t<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb1-26"><a href="#cb1-26"></a></span>
+<span id="cb1-27"><a href="#cb1-27"></a>        <span class="co"># Posterior predictive probabilities for each run length</span></span>
+<span id="cb1-28"><a href="#cb1-28"></a>        log_pis <span class="op">=</span> student.logpdf(x, df <span class="op">=</span> <span class="dv">2</span><span class="op">*</span>prior_shape[:t], loc <span class="op">=</span> mu, scale <span class="op">=</span> prior_rate[:t]<span class="op">/</span>prior_shape[:t])</span>
+<span id="cb1-29"><a href="#cb1-29"></a>        </span>
+<span id="cb1-30"><a href="#cb1-30"></a>        <span class="co"># Growth probability</span></span>
+<span id="cb1-31"><a href="#cb1-31"></a>        log_growth_probs <span class="op">=</span> log_pis <span class="op">+</span> log_message <span class="op">+</span> log_1_minus_H</span>
+<span id="cb1-32"><a href="#cb1-32"></a></span>
+<span id="cb1-33"><a href="#cb1-33"></a>        <span class="co"># Changepoint probability</span></span>
+<span id="cb1-34"><a href="#cb1-34"></a>        log_cp_prob <span class="op">=</span> logsumexp(log_pis <span class="op">+</span> log_message <span class="op">+</span> log_H)</span>
+<span id="cb1-35"><a href="#cb1-35"></a></span>
+<span id="cb1-36"><a href="#cb1-36"></a>        <span class="co"># Computing the evidence</span></span>
+<span id="cb1-37"><a href="#cb1-37"></a>        new_log_joint  <span class="op">=</span> np.append(log_cp_prob, log_growth_probs)</span>
+<span id="cb1-38"><a href="#cb1-38"></a></span>
+<span id="cb1-39"><a href="#cb1-39"></a>        <span class="co"># Updating the run length distribution at time t</span></span>
+<span id="cb1-40"><a href="#cb1-40"></a>        log_R[t, :t<span class="op">+</span><span class="dv">1</span>]  <span class="op">=</span> new_log_joint</span>
+<span id="cb1-41"><a href="#cb1-41"></a>        log_R[t, :t<span class="op">+</span><span class="dv">1</span>] <span class="op">-=</span> logsumexp(new_log_joint)</span>
+<span id="cb1-42"><a href="#cb1-42"></a></span>
+<span id="cb1-43"><a href="#cb1-43"></a>        <span class="co"># Updating the prior parameters for the next step</span></span>
+<span id="cb1-44"><a href="#cb1-44"></a></span>
+<span id="cb1-45"><a href="#cb1-45"></a>        prior_shape <span class="op">=</span> np.append([alpha0], prior_shape <span class="op">+</span> <span class="fl">0.5</span>)</span>
+<span id="cb1-46"><a href="#cb1-46"></a>        prior_rate <span class="op">=</span> np.append([beta0], prior_rate <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> (x <span class="op">-</span> mu)<span class="op">**</span><span class="dv">2</span>)</span>
+<span id="cb1-47"><a href="#cb1-47"></a>        </span>
+<span id="cb1-48"><a href="#cb1-48"></a>        <span class="co"># Pass message</span></span>
+<span id="cb1-49"><a href="#cb1-49"></a>        log_message <span class="op">=</span> new_log_joint</span>
+<span id="cb1-50"><a href="#cb1-50"></a></span>
+<span id="cb1-51"><a href="#cb1-51"></a>    <span class="cf">return</span> {<span class="st">"post_R"</span>: np.exp(log_R), <span class="st">"post_precision"</span>: posterior_precision}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="application-in-risk-monitoring-in-finance-2" class="slide level2">
+<h2>Application in risk monitoring in Finance</h2>
+<h3 id="results">Results</h3>
+<div class="cell" data-execution_count="7">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="Presentation_files/figure-revealjs/cell-8-output-1.png" width="962" height="542"></p>
+<figcaption>Result of the BOCD algorithm on the variance changepoint dataset.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="application-in-risk-monitoring-in-finance-3" class="slide level2">
+<h2>Application in risk monitoring in Finance</h2>
+<h3 id="results-1">Results</h3>
+<div class="callout callout-note callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Remarks</strong></p>
+</div>
+<div class="callout-content">
+<p>Note that the inferred variance seem to do great at the beginning, but then lacks reactivity. This is beacause of the online nature of the BOCD algorithm: at every time-step it keeps memory of what happened in the past, and the longer the past is, the stronger the memory gets.</p>
+<p>To prevent that, the <em>restarted</em> BOCD algorithm was developed by <span class="citation" data-cites="restarted_alami_2020">Alami, Maillard, and Feraud (<a href="#/references" role="doc-biblioref" onclick="">2020</a>)</span> which restarts all over again every time a changepoint is detected.</p>
+</div>
+</div>
+</div>
 </section>
 <section id="other-possible-examples-of-applications" class="slide level2">
 <h2>Other possible examples of applications</h2>
+<h3 id="retrospective-analysis-of-gdp-growth">Retrospective analysis of GDP growth</h3>
+<p>To analyse the effects of economic policies or the economic cycles, one can apply an <em>offline</em> changepoint analysis with a PELT algorithm to infer the number and the location of the changepoints, which can indicate a change in the economic cycle.</p>
+<div class="cell" data-execution_count="8">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="Presentation_files/figure-revealjs/cell-9-output-1.png" width="964" height="376"></p>
+<figcaption>Offline changepoint analysis of the US GPD growth between 1960 and 2018. The PELT algorithm was used to infer the changepoints.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="other-possible-examples-of-applications-1" class="slide level2">
+<h2>Other possible examples of applications</h2>
+<h3 id="retrospective-analysis-of-gdp-growth-1">Retrospective analysis of GDP growth</h3>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="im">import</span> ruptures <span class="im">as</span> rpt</span>
+<span id="cb2-2"><a href="#cb2-2"></a></span>
+<span id="cb2-3"><a href="#cb2-3"></a>data <span class="op">=</span> pd.read_csv(<span class="st">"../Datasets/gdp.csv"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4"></a></span>
+<span id="cb2-5"><a href="#cb2-5"></a>country_gdp <span class="op">=</span> data.loc[data[<span class="st">"Country Code"</span>] <span class="op">==</span> <span class="st">"USA"</span>].melt(id_vars<span class="op">=</span><span class="st">"Country Name"</span>, value_vars <span class="op">=</span> [<span class="bu">str</span>(i) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1960</span>, <span class="dv">2019</span>)], var_name <span class="op">=</span> <span class="st">"Year"</span>, value_name<span class="op">=</span><span class="st">"GDP"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6"></a>country_gdp[<span class="st">"Growth"</span>] <span class="op">=</span> country_gdp[<span class="st">"GDP"</span>].pct_change()</span>
+<span id="cb2-7"><a href="#cb2-7"></a></span>
+<span id="cb2-8"><a href="#cb2-8"></a>growth_data <span class="op">=</span> np.array(country_gdp[<span class="st">'Growth'</span>])[<span class="dv">1</span>:]<span class="op">*</span><span class="dv">100</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a></span>
+<span id="cb2-10"><a href="#cb2-10"></a>algo <span class="op">=</span> rpt.Pelt(model <span class="op">=</span> <span class="st">"l1"</span>, min_size <span class="op">=</span> <span class="dv">2</span>).fit(growth_data)</span>
+<span id="cb2-11"><a href="#cb2-11"></a>changepoints <span class="op">=</span> algo.predict(pen <span class="op">=</span> np.log(<span class="bu">len</span>(growth_data)))</span>
+<span id="cb2-12"><a href="#cb2-12"></a></span>
+<span id="cb2-13"><a href="#cb2-13"></a></span>
+<span id="cb2-14"><a href="#cb2-14"></a>plt.figure(figsize <span class="op">=</span> (<span class="dv">12</span>, <span class="dv">5</span>))</span>
+<span id="cb2-15"><a href="#cb2-15"></a>plt.plot(np.array(country_gdp[<span class="st">"Year"</span>], dtype <span class="op">=</span> <span class="bu">float</span>)[<span class="dv">1</span>:], growth_data, label <span class="op">=</span> <span class="st">"USA"</span>)</span>
+<span id="cb2-16"><a href="#cb2-16"></a>plt.vlines([np.array(country_gdp[<span class="st">"Year"</span>], dtype <span class="op">=</span> <span class="bu">float</span>)[<span class="dv">1</span>:][i] <span class="cf">for</span> i <span class="kw">in</span> changepoints[:<span class="op">-</span><span class="dv">1</span>]], linestyle <span class="op">=</span> <span class="st">"dashed"</span>, color <span class="op">=</span> <span class="st">'r'</span>, linewidth <span class="op">=</span> <span class="fl">0.5</span>, ymin <span class="op">=</span> <span class="fl">1.1</span><span class="op">*</span><span class="bu">min</span>(growth_data), ymax <span class="op">=</span> <span class="fl">1.1</span><span class="op">*</span><span class="bu">max</span>(growth_data))</span>
+<span id="cb2-17"><a href="#cb2-17"></a>plt.xticks(rotation <span class="op">=</span> <span class="dv">45</span>)<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18"></a>plt.ylim((<span class="fl">1.05</span><span class="op">*</span><span class="bu">min</span>(growth_data), <span class="fl">1.05</span><span class="op">*</span><span class="bu">max</span>(growth_data)))<span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19"></a>plt.xlabel(<span class="st">"Year"</span>)</span>
+<span id="cb2-20"><a href="#cb2-20"></a>plt.legend()</span>
+<span id="cb2-21"><a href="#cb2-21"></a>plt.ylabel(<span class="st">"GDP growth (%)"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
 <section id="useful-libraries-package-and-repository" class="slide level2">
 <h2>Useful libraries, package and repository</h2>
@@ -842,6 +1062,9 @@ p(r_t | X_{1:t}) = \frac{p(r_t, X_{1:t})}{\sum_{r_{t'}} p(r_{t'}, X_{1:t})}
 <div id="refs" class="references csl-bib-body hanging-indent" role="list">
 <div id="ref-adams_bayesian_2007" class="csl-entry" role="listitem">
 Adams, Ryan Prescott, and David J. C. MacKay. 2007. <span>“Bayesian <span>Online</span> <span>Changepoint</span> <span>Detection</span>.”</span> arXiv. <a href="https://doi.org/10.48550/arXiv.0710.3742">https://doi.org/10.48550/arXiv.0710.3742</a>.
+</div>
+<div id="ref-restarted_alami_2020" class="csl-entry" role="listitem">
+Alami, Reda, Odalric Maillard, and Raphael Feraud. 2020. <span>“Restarted <span>B</span>ayesian Online Change-Point Detector Achieves Optimal Detection Delay.”</span> In <em>Proceedings of the 37th International Conference on Machine Learning</em>, edited by Hal Daume III and Aarti Singh, 119:211–21. Proceedings of Machine Learning Research. PMLR. <a href="https://proceedings.mlr.press/v119/alami20a.html">https://proceedings.mlr.press/v119/alami20a.html</a>.
 </div>
 <div id="ref-noauthor_bayesian_nodate" class="csl-entry" role="listitem">
 <span>“Bayesian <span>Online</span> <span>Changepoint</span> <span>Detection</span>.”</span> n.d. Accessed June 6, 2024. <a href="https://gregorygundersen.com/blog/2019/08/13/bocd/#adams2007bayesian">https://gregorygundersen.com/blog/2019/08/13/bocd/#adams2007bayesian</a>.

@@ -185,7 +185,7 @@ $$
 :::{.callout-note}
 ## How to choose the threshold $c$?
 
-Some theoretical results that ensure that the false positive rate tends to $0$ as $n \to \infty$ suggest that the threshold should be set to $c = 2\log \log n$. However, this threshold can appear be to be quite conservative in some applications, and some papers suggest to use $c = 2 \log n$ instead.
+Some theoretical results that ensure that the false positive rate tends to $0$ as $n \to \infty$ suggest that the threshold should be set to at least $c = 2\log n$. However, this threshold can appear be to be quite conservative in some applications, and some papers suggest to use $c = 2 \log \log n$ instead.
 :::
 
 The mean variation is simply estimated with $\bar X_{1:\tau}-\bar X_{\tau+1:n}$
@@ -342,7 +342,7 @@ $$
 Let us assume that $\beta(q) = \lambda q$ where $\lambda$ is a constant. We can therefore write the minimisation problem above as 
 
 $$
-Q_{n, \lambda}(q; \tau_1, \dots, \tau_q) = \sum_{j=1}^{q+1}c_{\tau_{j-1}, \tau_j}(X_{1:n})j) +q\lambda
+Q_{n, \lambda}(q; \tau_1, \dots, \tau_q) = \sum_{j=1}^{q+1}c_{\tau_{j-1}, \tau_j}(X_{1:n}) +q\lambda
 $$
 
 
@@ -357,7 +357,7 @@ Now denote
 $$
 Q_{t, \lambda} = \underset{q; ~\tau_1 < \dots < \tau_q <t}{\min} ~\sum_{j=1}^{q}c_{\tau_{j-1}, \tau_j}(X_{1:n}) + c_{\tau_{q}, t}(X_{1:n}) + q\lambda
 $$
-This can be interpreted as the minimum segmentation cost of the time series between times $0$ and $t$. It can be be rewritten: 
+This can be interpreted as the [minimum segmentation cost]{.bg style="--col: #D78484"} of the time series between times $0$ and $t$. It can be be rewritten: 
 
 $$
 Q_{t, \lambda} = \min \left\{ c_{0, t}(X_{1:n}), \underset{\tau = 1, \dots, t-1}{\min} Q_{\tau, \lambda} + c_{\tau, t}(X_{1:n}) + \lambda \right\}
@@ -376,7 +376,7 @@ $$
 
 #### Optimal partitionning
 
-This last expression has a recursive structure that one can exploit to solve this minimisation problem and estimate the changepoints $(\hat \tau_j)_j$ and their number $q$:
+This last expression has a recursive structure that one can exploit to solve this minimisation problem and estimate the changepoints $(\hat \tau_j)_j$ and their number $\hat q$:
 
 $$
 \hat \tau_1 = \underset{\tau = 0, \dots, n-1}{\text{argmin}} Q_{\tau, \lambda} + c_{\tau, n}(X_{1:n}) + \lambda
@@ -433,7 +433,11 @@ $$
 
 ### Bayesian online changepoint detection
 
-```{python, include = TRUE, echo = FALSE}
+```{python}
+
+#| echo: false
+#| include: true
+#| fig-cap: "Example of mean changepoint detection with the BOCD algorithm. The bottom plot represent the posterior probability distribution of $r_t$."
 
 from   scipy.stats import norm, t
 from   scipy.special import logsumexp
@@ -497,7 +501,7 @@ def BOCD_mean(signal, mean0, var0, sigma_noise, hazard_prob):
 
 results = BOCD_mean(signal_means, 0, 3, sigma_noise, hazard_prob = 1/100)
 
-fig, ax = plt.subplots(nrows = 2, ncols = 1, figsize = (10, 7))
+fig, ax = plt.subplots(nrows = 2, ncols = 1, figsize = (10, 6))
 
 ax[0].plot(signal_means)
 ax[0].plot(results["post_mean"])
@@ -524,7 +528,12 @@ ax[1].margins(0)
 
 ### Well log
 
-```{python, include = TRUE, echo = FALSE}
+```{python}
+
+#| echo: false
+#| include: true
+#| fig-cap: "Material response vs depth during an oil well drilling. This type of data is used to analyse the soil and determine what is the best depth and orientation for the forage."
+
 import pandas as pd
 
 well_log = pd.read_csv("../Datasets/well_log.csv")
@@ -538,21 +547,229 @@ well_log["x"].plot();
 
 ### Dow Jones Industrial Average
 
-```{python, include = TRUE, echo = FALSE}
+```{python}
+
+#| echo: false
+#| include: true
+#| fig-cap: "Daily returns of the Dow Jones Industrial Average index between 1970 and 2000. This can be one building block for market risk monitoring."
 
 dow_jones = pd.read_csv("../Datasets/DJA.csv")
 
 dow_jones["Date"] = pd.to_datetime(dow_jones["Date"])
 dow_jones["DJIA"].astype(float)
 
-dow_jones["Daily returns"] = np.append([np.nan], np.diff(dow_jones["DJIA"]))
+dow_jones["Daily returns"] = dow_jones["DJIA"].pct_change()
 
 dow_jones.plot(x = "Date", y = "Daily returns");
 ```
 
 ## Application in risk monitoring in Finance
 
+### Dataset
+
+To monitor financial markets and potentially take action to protect financial stability, trading venues monitor the volatility of the different stock index, to do so, they need some sort of *online* changepoint detection.
+
+```{python}
+
+#| echo: false
+#| include: true
+#| fig-cap: "Example of variance changepoint dataset. Between the 2 changepoint, the variance is 3 times higher than the rest of the series."
+
+
+mu = 0
+sigma_noise = 1
+
+a = 1*sigma_noise * np.random.randn(150,) + mu
+b = 3*sigma_noise * np.random.randn(100,) + mu
+c = 1*sigma_noise * np.random.randn(100,) + mu
+
+signal_var = np.concatenate([a, b, c], axis = 0)
+
+plt.plot(signal_var)
+plt.axvline(x = 150, linestyle = "dashed", c = 'r', linewidth = 0.5)
+plt.axvline(x = 250, linestyle = "dashed", c = 'r', linewidth = 0.5);
+
+```
+
+
+## Application in risk monitoring in Finance
+
+### Changepoint algorithm
+
+
+```{python}
+#|echo : true
+
+
+def BOCD_var(signal, alpha0, beta0, hazard_prob, mu = 0):
+
+    # Initialisation
+    T = len(signal)
+    log_R = -np.inf * np.ones((T+1, T+1)) # Run length posterior log-probability matrix
+    log_R[0, 0] = 0 # At time 0, the posterior proability is initialised to 1 at R = 0
+
+    posterior_precision = np.nan * np.empty(T) # Mean of the posterior distribution of the precision
+
+
+    log_message = np.array([0]) # message initialised at 1
+    log_H = np.log(hazard_prob) # Constant prior on changepoint probability.
+    log_1_minus_H = np.log(1-hazard_prob)
+
+    # Prior's parameters for the previous data point
+    prior_shape = np.array([alpha0])
+    prior_rate = np.array([beta0]) 
+
+
+    # Online posterior distribution of the run length update:
+    for t in range(1, T+1):
+        x = signal[t-1] # Reading the new data point
+
+        # Posterior mean for the precision
+        posterior_precision[t-1] = prior_shape[t-1]/prior_rate[t-1]
+
+        # Posterior predictive probabilities for each run length
+        log_pis = student.logpdf(x, df = 2*prior_shape[:t], loc = mu, scale = prior_rate[:t]/prior_shape[:t])
+        
+        # Growth probability
+        log_growth_probs = log_pis + log_message + log_1_minus_H
+
+        # Changepoint probability
+        log_cp_prob = logsumexp(log_pis + log_message + log_H)
+
+        # Computing the evidence
+        new_log_joint  = np.append(log_cp_prob, log_growth_probs)
+
+        # Updating the run length distribution at time t
+        log_R[t, :t+1]  = new_log_joint
+        log_R[t, :t+1] -= logsumexp(new_log_joint)
+
+        # Updating the prior parameters for the next step
+
+        prior_shape = np.append([alpha0], prior_shape + 0.5)
+        prior_rate = np.append([beta0], prior_rate + 0.5 * (x - mu)**2)
+        
+        # Pass message
+        log_message = new_log_joint
+
+    return {"post_R": np.exp(log_R), "post_precision": posterior_precision}
+
+```
+
+
+## Application in risk monitoring in Finance
+
+### Results
+
+```{python}
+#| echo: false
+#| include: true
+#| fig-cap: "Result of the BOCD algorithm on the variance changepoint dataset."
+
+student = t
+
+signal = signal_var
+T = len(signal)
+results = BOCD_var(signal, 1, 2, hazard_prob = 1/200, mu = mu)
+
+fig, ax = plt.subplots(nrows = 2, ncols = 1, figsize = (12,6.5))
+
+ax[0].plot(signal)
+ax[0].plot(mu * np.ones((T,)))
+ax[0].plot(mu * np.ones((T,)) + 2/results["post_precision"], linestyle = "dashed", c = 'k')
+ax[0].plot(mu * np.ones((T,)) - 2/results["post_precision"], linestyle = "dashed", c = 'k')
+ax[0].axvline(x = 150, linestyle = "dashed", c = 'r', linewidth = 0.5)
+ax[0].axvline(x = 250, linestyle = "dashed", c = 'r', linewidth = 0.5)
+ax[0].set_title("Variance changepoint detection")
+ax[0].set_xlim((0, 350))
+
+ax[1].imshow(np.rot90(results['post_R']), aspect='auto', cmap='gray_r', 
+               norm=LogNorm(vmin=0.0001, vmax=1))
+ax[1].axvline(x = 150, linestyle = "dashed", c = 'r', linewidth = 0.5)
+ax[1].axvline(x = 250, linestyle = "dashed", c = 'r', linewidth = 0.5)
+ax[1].set_xlim([0, len(signal)])
+ax[1].margins(0);
+```
+
+
+## Application in risk monitoring in Finance
+
+### Results
+
+:::{.callout-note}
+## Remarks
+Note that the inferred variance seem to do great at the beginning, but then lacks reactivity. This is beacause of the online nature of the BOCD algorithm: at every time-step it keeps memory of what happened in the past, and the longer the past is, the stronger the memory gets.
+
+To prevent that, the *restarted* BOCD algorithm was developed by @restarted_alami_2020 which restarts all over again every time a changepoint is detected.
+
+:::
+
 ## Other possible examples of applications
+
+### Retrospective analysis of GDP growth
+
+To analyse the effects of economic policies or the economic cycles, one can apply an *offline* changepoint analysis with a PELT algorithm to infer the number and the location of the changepoints, which can indicate a change in the economic cycle.
+
+```{python}
+
+#| echo: false
+#| include: true
+#| fig-cap: "Offline changepoint analysis of the US GPD growth between 1960 and 2018. The PELT algorithm was used to infer the changepoints."
+
+import ruptures as rpt
+
+data = pd.read_csv("../Datasets/gdp.csv")
+
+country_gdp = data.loc[data["Country Code"] == "USA"].melt(id_vars="Country Name", value_vars = [str(i) for i in range(1960, 2019)], var_name = "Year", value_name="GDP")
+country_gdp["Growth"] = country_gdp["GDP"].pct_change()
+
+growth_data = np.array(country_gdp['Growth'])[1:]*100
+
+algo = rpt.Pelt(model = "l1", min_size = 2).fit(growth_data)
+changepoints = algo.predict(pen = np.log(len(growth_data)))
+
+plt.figure(figsize = (12, 4))
+plt.plot(np.array(country_gdp["Year"], dtype = float)[1:], growth_data, label = "USA")
+plt.vlines([np.array(country_gdp["Year"], dtype = float)[1:][i] for i in changepoints[:-1]], linestyle = "dashed", color = 'r', linewidth = 0.5, ymin = 1.1*min(growth_data), ymax = 1.1*max(growth_data))
+plt.xticks(rotation = 45);
+plt.ylim((1.05*min(growth_data), 1.05*max(growth_data)));
+plt.xlabel("Year")
+plt.legend()
+plt.ylabel("GDP growth (%)");
+```
+
+
+
+## Other possible examples of applications
+
+### Retrospective analysis of GDP growth
+
+```{python}
+#| eval: false
+#| echo: true
+
+import ruptures as rpt
+
+data = pd.read_csv("../Datasets/gdp.csv")
+
+country_gdp = data.loc[data["Country Code"] == "USA"].melt(id_vars="Country Name", value_vars = [str(i) for i in range(1960, 2019)], var_name = "Year", value_name="GDP")
+country_gdp["Growth"] = country_gdp["GDP"].pct_change()
+
+growth_data = np.array(country_gdp['Growth'])[1:]*100
+
+algo = rpt.Pelt(model = "l1", min_size = 2).fit(growth_data)
+changepoints = algo.predict(pen = np.log(len(growth_data)))
+
+
+plt.figure(figsize = (12, 5))
+plt.plot(np.array(country_gdp["Year"], dtype = float)[1:], growth_data, label = "USA")
+plt.vlines([np.array(country_gdp["Year"], dtype = float)[1:][i] for i in changepoints[:-1]], linestyle = "dashed", color = 'r', linewidth = 0.5, ymin = 1.1*min(growth_data), ymax = 1.1*max(growth_data))
+plt.xticks(rotation = 45);
+plt.ylim((1.05*min(growth_data), 1.05*max(growth_data)));
+plt.xlabel("Year")
+plt.legend()
+plt.ylabel("GDP growth (%)");
+```
+
 
 ## Useful libraries, package and repository
 
