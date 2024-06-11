@@ -1,0 +1,582 @@
+---
+title: Changepoint detection
+subtitle: Inference and applications
+format: clean-revealjs
+html-math-method:
+  method: mathjax
+  url: "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+author:
+  - name: Etienne Caprioli
+    email: etienne.caprioli23@imperial.ac.uk
+    affiliations: Imperial College London
+date: last-modified
+
+revealjs-plugins:
+  - revealjs-text-resizer
+bibliography: bibliography.bib
+nocite: |
+  @*
+---
+
+
+<!--
+before rendering execute in the terminal:
+- quarto install extension grantmcdermott/quarto-revealjs-clean
+- quarto add gadenbuie/revealjs-text-resizer
+-->
+
+
+## Outline of this presentation
+:::: {.columns}
+
+::: {.column width="50%"}
+### Inference
+  - Problem setting
+    - Statistical test
+    - Online/Offline inference
+  - What are we interested in ?
+    - Single changepoint
+    - Multiple changepoints
+  - Bayesian approach
+:::
+
+::: {.column width="50%"}
+### Applications
+  - Application in market risk monitoring 
+  - Other areas of applications
+  - Useful libraries, packages and repositories
+:::
+::::
+
+
+# Inference {background-color="#40666e"}
+
+## Problem setting
+
+### Piecewise homogeneous sequences
+
+Let $(X_i)_i$ be a sequence of random variables. We model this signal with the equation 
+
+$$
+X_t = \sum_{j=0}^q X_t^{(j)} ~1_{\tau_j \le t\le \tau_{j+1}}
+$$
+Where each $(X_t^{(j)})_j$ can be modeled individually. We are interested in inferring the *changepoints* $(\tau_j)_j$ and the $j$ *joint distributions* of $(X_t^{(j)})_j$.
+
+:::{.callout-note}
+## Note
+
+The collections $(X_t^{(j)})_j$ can be modeled in very different ways: IID sequences, (non-) stationary time series, IID + trend/seasonality...
+:::
+
+## Problem setting
+
+### Example of datasets
+
+```{python, include = TRUE, echo = FALSE, fig.cap = ""}
+import numpy as np
+import matplotlib.pyplot as plt
+
+sigma_noise = 1
+
+a = np.ones((100,)) * 0
+b = np.ones((50,)) * 2
+c = np.ones((50,)) * 0
+
+means = np.concatenate([a,b,c], axis = 0)
+signal_means = np.concatenate([a,b,c], axis = 0) + sigma_noise * np.random.randn(200,)
+
+mu = 0
+
+a = 1*sigma_noise * np.random.randn(100,) + mu
+b = 4*sigma_noise * np.random.randn(50,) + mu
+c = 1*sigma_noise * np.random.randn(50,) + mu
+
+signal_var = np.concatenate([a, b, c], axis = 0)
+
+fig, ax = plt.subplots(ncols = 1, nrows = 2, figsize = (14,6.5))
+
+ax[0].plot(signal_means);
+ax[0].plot(means);
+ax[0].axvline(x = 100, linestyle = "dashed", c = 'r', linewidth = 0.5);
+ax[0].axvline(x = 150, linestyle = "dashed", c = 'r', linewidth = 0.5);
+ax[0].set_title("Change in mean");
+
+
+ax[1].plot(signal_var);
+ax[1].axvline(x = 100, linestyle = "dashed", c = 'r', linewidth = 0.5);
+ax[1].axvline(x = 150, linestyle = "dashed", c = 'r', linewidth = 0.5);
+ax[1].set_title("Change in variance");
+
+```
+
+
+
+## Problem setting
+
+### Statistical test
+
+We will adopt here the most used framework of change in mean, and assume that the variance $\sigma^2$ is known (or estimated).
+
+Let $q$ be the assumed number of changepoints in the dataset, we are interested in testing:
+
+\begin{align}
+H_0: q = 0 \\
+H_1: q = m
+\end{align}
+
+To perform this test, we need a *test statistic* to be compared to a certain *threshold*. We will focus here on the likelihood ratio (LR) statistic evaluated at some time point $\tau$:
+
+$$
+LR_\tau = \frac{1}{\sigma^2}\left[ \sum_{i=1}^n (X_i-\bar X_{1:n})^2 - \sum_{i=1}^n (X_i- \bar X_{1:\tau})^2 - \sum_{i=\tau + 1}^n (X_i- \bar X_{\tau +1:n})^2\right]
+$$
+Where $\bar X_{s:t} = \frac{1}{t-s+1}\sum_{i=s}^tX_i$ is the sample mean operator.
+
+
+## Problem setting
+
+### Statistical test
+
+:::{.callout-note}
+## CUSUM statistic
+
+If we define $C_\tau$ such that
+
+$$
+C_\tau = \sqrt{\frac{\tau(n-\tau)}{n}}\left| \bar X_{1:\tau} - \bar X_{\tau + 1:n} \right|
+$$
+We note that $LR_\tau = \frac{C_\tau^2}{\sigma^2}$
+:::
+
+## Problem setting
+
+### Online/Offline inference
+
+#### Online inference
+
+The dataset keeps growing through time. We have a continous flow of of datapoints coming. The goal is still to estimate the localisation of the changepoint, but usually the quantity of data *after* the changepoint is limited. The data is analysed by flow.
+
+:::{.callout-note}
+## Example
+Seismographs continuously monitors the seismic activity in a given zone, stock market quotes are continuously updated.
+:::
+
+#### Offline inference
+
+The size of the dataset is fixed, the aim is still to detect the changepoints, but this time we have access to possibly much more data after the changepoint.
+
+:::{.callout-note}
+## Example
+Retrospective analysis of economic policies, or natural catastrophes...
+:::
+
+
+## What are we interested in ?
+
+### Single changepoint
+
+In some settings we know that there is at most one changepoint in the dataset. In this setting, the inference of the changepoint is well documented and an essentially complete theory exist.
+
+We use the $LR$ statistic and set a threshold $c >0$. If the threshold is exceeded, than we conclude that there is a changepoint in the data and estimate this changepoint $\tau$ with :
+
+$$
+\hat \tau = \underset{\tau \in \{1, \dots, n-1 \}}{\text{argmax}} LR_\tau = \underset{\tau \in \{1, \dots, n-1 \}}{\text{argmax}} \frac{C_\tau^2}{\sigma^2}
+$$
+
+:::{.callout-note}
+## How to choose the threshold $c$?
+
+Some theoretical results that ensure that the false positive rate tends to $0$ as $n \to \infty$ suggest that the threshold should be set to $c = 2\log \log n$. However, this threshold can appear be to be quite conservative in some applications, and some papers suggest to use $c = 2 \log n$ instead.
+:::
+
+The mean variation is simply estimated with $\bar X_{1:\tau}-\bar X_{\tau+1:n}$
+
+
+
+## What are we interested in ?
+
+### Multiple changepoints
+
+- Unfortunately this framework becomes less efficient when there are several changepoints.
+  - The presence of other changepoints affects the value of the CUSUM statistics, pushing it sometimes below the threshold even when there is an actual changepoint
+  - This framework doesn't help to estimate the number of changepoints
+
+:::{.callout-note}
+## The penalised cost function
+
+To deal with the possibility of multiple changepoints, we define the notion of cost function $f(\tau_1, \dots, \tau_q|X_1, \dots, X_n)$, which is a function that we aim to minimize in order to find the changepoints. One example of this function is simply the negative log-likelihood if we have a model for IID samples (e.g. Gaussian IID samples):
+
+$$
+f(\tau_1, \dots, \tau_q|X_1, \dots, X_n) = \frac{n}{2}\log\sigma^2 + \frac{\sum_{j=1}^{q+1}\sum_{i=\tau_{j-1}+1}^{\tau_j}(X_i- \bar X_{\tau_{j-1}+1:\tau_j})^2}{2\sigma^2}
+$$
+
+And aim to minimise the penalised cost:
+
+$$
+\underset{\tau_1, \dots, \tau_q}{\text{min}} ~f(\tau_1, \dots, \tau_q|X_1, \dots, X_n) + \beta(q)
+$$
+
+Where $\beta(q)$ is a penalisation that promotes solutions with a limited number of changepoints.
+:::
+
+## What are we interested in ?
+
+### Multiple changepoints
+
+:::{.callout-note}
+## Example of penalisations
+- BIC : $\beta(q) = q \log(n)$
+- AIC : $\beta(q) = 2q$
+
+Each type of penalisation has its own pros/cons and theoretical results. For instance, under some regularity condition, the BIC penalisation ensures that the infered number of changepoints $\hat q$ converges to the true number of changepoints $q^*$.
+:::
+
+## What are we interested in ?
+
+### Multiple changepoints
+
+Another idea estimates multiple changepoints is to use a recursive approach. Since we have an efficient method to detect one changepoint, why not use this method iteratively on a succession of intervals ?
+
+#### Binary segmentation algorithm
+
+
+:::{.callout-note}
+## BS algorithm
+- Find $\hat \tau_1 = \underset{\tau \in \{1, \dots, n-1 \}}{\text{argmax}} C_\tau$
+  - If $C_{\hat \tau_1} > c_n$ then keep $\hat \tau_1$ in memory and run the first step again on the intervals $[1, \hat \tau_1]$ and $[\hat \tau_1+1, n]$.
+  - If $C_{\hat \tau_1} \le c_n$ then stop the algorithm and return the list of the kept changepoints.
+  
+Or 
+
+- Find $\hat \tau_1 = \underset{\tau \in \{1, \dots, n-1 \}}{\text{argmax}} LR_\tau$
+- Run again the first step again on the intervals $[1, \hat \tau_1]$ and $[\hat \tau_1+1, n]$, until the length of the interval is less then 2.
+- Select the best changepoints collection using the penalised cost method.
+
+:::
+
+## What are we interested in ?
+
+### Binary segementation algorithm
+
+:::{.callout-note}
+## Notes
+A good algorithm
+
+- Easy to implement (recusrive algorithm)
+- Computationally efficient (complexity in $\mathcal{O}(n\log n)$)
+
+But 
+
+- Relies on the ability of the CUSUM statistic to detect one changepoint among possibly several changepoints...
+- Need to select the right threshold $c_n$ in the first version of the algorithm...
+:::
+
+![Multiple changepoints with the CUSUM statistic](Figures/multiple_changepoints.png)
+
+
+## What are we interested in ?
+
+### Multiple changepoints
+
+#### Wild binary segmentation (WBS) algorithm
+
+To try to prevent the problem of ending up working in an interval that contains several changepoints and disturb the changepoint estimation, the Wild Binary Segmentation algorithm extend the BS algorithm to $M$ random sub-intervals $[s_m, e_m] \subset [1, n]$ and only keeping the highest CUSUM statistic among the batch of CUSUM statistic calculated. This way, we hope that at least one of the random sub-interval only contains one true changepoint.
+
+
+
+:::{.callout-note}
+## BS algorithm
+
+- Draw $M$ sub-intervals of $[1, n]$ and let $\mathcal{M}$ be the set of the indices $m$ such that $[s_m, e_m] \subset [1, n]$.
+- Compute $m_0, \hat \tau_1 = \underset{m\in\mathcal{M}, ~\tau \in [s_m, e_m]}{\text{argmax}} ~ C_{\tau}(X_{s_m:e_m})$
+  - If $LR_{\hat \tau_1} > c_n$ then keep $\hat \tau_1$ in memory and run the first step again on the intervals $[1, \hat \tau_1]$ and $[\hat \tau_1+1, n]$.
+  - If $LR_{\hat \tau_1} \le c_n$ then stop the algorithm and return the list of the kept changepoints.
+  
+Or 
+
+- Draw $M$ sub-intervals of $[1, n]$ and let $\mathcal{M}$ be the set of the indices $m$ such that $[s_m, e_m] \subset [1, n]$.
+- Compute $m_0, \hat \tau_1 = \underset{m\in\mathcal{M}, ~\tau \in [s_m, e_m]}{\text{argmax}} ~ C_{\tau}(X_{s_m:e_m})$
+- Run again the first step again on the intervals $[1, \hat \tau_1]$ and $[\hat \tau_1+1, n]$, until the length of the interval is less then 2.
+- Select the best changepoints collection using the penalised cost method.
+
+:::
+
+## What are we interested in ?
+
+### Multiple changepoints
+
+#### Wild binary segmentation (WBS) algorithm
+
+
+:::{.callout-note}
+## Notes
+A good algorithm
+
+- Solve the initial problem of perturbation of the CUSUM statistics when there are several changepoints
+- Computationally sill quite efficient
+
+But 
+
+- The computational cost increases with $M$.
+- Need to select the right threshold $c_n$ in the first version of the algorithm...
+:::
+
+
+## What are we interested in ?
+
+### Multiple changepoints
+
+#### Optimal partitionning
+
+Let us come back to 
+
+$$
+\underset{\tau_1, \dots, \tau_q}{\text{min}} ~f(\tau_1, \dots, \tau_q|X_1, \dots, X_n) + \beta(q)
+$$
+
+This minimisation problem greatly simplifies if we assume that the criteria $f$ can be broken down into a sum of costs over several segments:
+
+$$
+f(\tau_1, \dots, \tau_q|X_1, \dots, X_n) = \sum_{j=1}^{q+1} c_{\tau_{j-1}, \tau_j}(X_{1:n})
+$$
+
+Let us assume that $\beta(q) = \lambda q$ where $\lambda$ is a constant. We can therefore write the minimisation problem above as 
+
+$$
+Q_{n, \lambda}(q; \tau_1, \dots, \tau_q) = \sum_{j=1}^{q+1}c_{\tau_{j-1}, \tau_j}(X_{1:n})j) +q\lambda
+$$
+
+
+## What are we interested in ?
+
+### Multiple changepoints
+
+#### Optimal partitionning
+
+Now denote
+
+$$
+Q_{t, \lambda} = \underset{q; ~\tau_1 < \dots < \tau_q <t}{\min} ~\sum_{j=1}^{q}c_{\tau_{j-1}, \tau_j}(X_{1:n}) + c_{\tau_{q}, t}(X_{1:n}) + q\lambda
+$$
+This can be interpreted as the minimum segmentation cost of the time series between times $0$ and $t$. It can be be rewritten: 
+
+$$
+Q_{t, \lambda} = \min \left\{ c_{0, t}(X_{1:n}), \underset{\tau = 1, \dots, t-1}{\min} Q_{\tau, \lambda} + c_{\tau, t}(X_{1:n}) + \lambda \right\}
+$$
+Which simplifies further if we set $Q_{0, \lambda} = -\lambda$ (this value is arbitrary as it represents the minimum segmenting cost of the series between $0$ and $0$):
+
+$$
+Q_{t, \lambda} = \underset{\tau = 1, \dots, t-1}{\min} Q_{\tau, \lambda} + c_{\tau, t}(X_{1:n}) + \lambda
+$$
+
+
+
+## What are we interested in ?
+
+### Multiple changepoints
+
+#### Optimal partitionning
+
+This last expression has a recursive structure that one can exploit to solve this minimisation problem and estimate the changepoints $(\hat \tau_j)_j$ and their number $q$:
+
+$$
+\hat \tau_1 = \underset{\tau = 0, \dots, n-1}{\text{argmin}} Q_{\tau, \lambda} + c_{\tau, n}(X_{1:n}) + \lambda
+$$
+And then 
+
+$$
+\hat \tau_{j+1} = \underset{\tau = 0, \dots,\hat \tau_j-1}{\text{argmin}} Q_{\tau_, \lambda} + c_{\tau, \hat \tau_j}(X_{1:n}) + \lambda
+$$
+
+We recursively computes the $(\hat \tau_j)_j$ until we fine $\hat \tau = 0$.
+
+## What are we interested in ?
+
+### Multiple changepoints
+
+#### Pruned exact linear time (PELT) algorithm
+
+
+The problem of the optimal partitioning is its computational cost: $\mathcal{O}(n^2)$ (which can become prohibitive in some applications). The PELT algorithm has been introduced to reduce the computational cost of optimal partitioning by adding a *pruning* rule that prunes parts of the search space that are deemed to have a higher segmentation cost.
+
+Indeed if at some point $\tau$ we have:
+
+$$
+Q_{\tau, \lambda} + c_{\tau+1:t}(X_{1:n}) + a > Q_t, \quad \text{for some } a>0
+$$
+Then $\tau$ will never be an acceptable changepoint, and can thus be eliminated from the search space.
+
+:::{.callout-note}
+## Complexity of the PELT algorithm
+It has been proven that if the number of changepoint linearly increases with the number of observations (constant changepoint rate), then the complexity of the PELT algorithm becomes $\mathcal{O}(n)$! If this assumption doesn't hold, then the algorithm keeps a quadratic complexity (@killick_optimal_2012).
+:::
+
+## Bayesian approach
+
+### Bayesian online changepoint detection
+
+This method, based on @adams_bayesian_2007, adopts a Bayesian approach to compute the posterior probability distribution of the "run length" $r_t$ (i.e. the time after the last change point):
+
+$$
+r_t=\begin{cases}
+			0, & \text{if $t$ is a changepoint}\\
+            r_{t-1} + 1, & \text{otherwise}
+		 \end{cases}
+$$
+
+The idea is to assign a prior to the "hazard rate" (i.e. the frequency at which the changepoints occur) and use the exponential family posterior predictive closed formula to compute the posterior probability distribution of $r_t$ at every $t$:
+
+$$
+p(r_t | X_{1:t}) = \frac{p(r_t, X_{1:t})}{\sum_{r_{t'}} p(r_{t'}, X_{1:t})}
+$$
+
+## Bayesian approach
+
+### Bayesian online changepoint detection
+
+```{python, include = TRUE, echo = FALSE}
+
+from   scipy.stats import norm, t
+from   scipy.special import logsumexp
+from   matplotlib.colors import LogNorm
+
+
+def BOCD_mean(signal, mean0, var0, sigma_noise, hazard_prob):
+
+    # Initialisation
+    T = len(signal)
+    log_R = -np.inf * np.ones((T+1, T+1)) # Run length posterior log-probability matrix
+    log_R[0, 0] = 0 # At time 0, the posterior proability is initialised to 1 at R = 0
+
+    predictive_mean = np.nan * np.empty(T) # Mean of the predictive distribution of the next data point
+    predictive_variance = np.nan * np.empty(T) # Variance of the predictive distribution of the next data point
+
+    log_message = np.array([0]) # message initialised at 1
+    log_H = np.log(hazard_prob) # Constant prior on changepoint probability.
+    log_1_minus_H = np.log(1-hazard_prob)
+
+    # Prior's parameters for the previous data point
+    prior_mean = np.array([mean0])
+    prior_variance = np.array([var0]) 
+
+
+    # Online posterior distribution of the run length update:
+    for t in range(1, T+1):
+        x = signal[t-1] # Reading the new data point
+
+        # Predictions for the next data point
+        predictive_mean[t-1] = np.sum(np.exp(log_R[t-1, :t]) * prior_mean[:t])
+        predictive_variance[t-1] = np.sum(np.exp(log_R[t-1, :t]) * (prior_variance[:t] + sigma_noise**2))
+
+        # Posterior predictive probabilitu=ies for each run length
+        log_pis = norm(prior_mean[:t], np.sqrt(prior_variance[:t]+ sigma_noise**2)).logpdf(x)
+        
+        # Growth probability
+        log_growth_probs = log_pis + log_message + log_1_minus_H
+
+        # Changepoint probability
+        log_cp_prob = logsumexp(log_pis + log_message + log_H)
+
+        # Computing the evidence
+        new_log_joint  = np.append(log_cp_prob, log_growth_probs)
+
+        # Updating the run length distribution at time t
+        log_R[t, :t+1]  = new_log_joint
+        log_R[t, :t+1] -= logsumexp(new_log_joint)
+
+        # Updating the prior parameters for the next step
+        prior_variance_new = 1/(1/prior_variance + sigma_noise**2)
+        prior_variance = np.append([var0], prior_variance_new)
+
+        prior_mean = np.append([mean0], (prior_mean / prior_variance[:-1] + x/(sigma_noise**2))*prior_variance_new)
+        prior_prvariance = prior_variance_new
+        
+        # Pass message
+        log_message = new_log_joint
+
+    return {"post_R": np.exp(log_R), "post_mean": predictive_mean, "post_var": predictive_variance}
+
+results = BOCD_mean(signal_means, 0, 3, sigma_noise, hazard_prob = 1/100)
+
+fig, ax = plt.subplots(nrows = 2, ncols = 1, figsize = (10, 7))
+
+ax[0].plot(signal_means)
+ax[0].plot(results["post_mean"])
+ax[0].plot(results["post_mean"] + 2*results["post_var"], linestyle = "dashed", c = 'k')
+ax[0].plot(results["post_mean"] - 2*results["post_var"], linestyle = "dashed", c = 'k')
+ax[0].axvline(x = 100, linestyle = "dashed", c = 'r', linewidth = 0.5)
+ax[0].axvline(x = 150, linestyle = "dashed", c = 'r', linewidth = 0.5)
+ax[0].set_title('Mean changepoint detection')
+
+ax[1].imshow(np.rot90(results['post_R']), aspect='auto', cmap='gray_r', 
+               norm=LogNorm(vmin=0.0001, vmax=1))
+ax[1].axvline(x = 100, linestyle = "dashed", c = 'r', linewidth = 0.5)
+ax[1].axvline(x = 150, linestyle = "dashed", c = 'r', linewidth = 0.5)
+ax[1].set_xlim([0, len(signal_means)])
+ax[1].margins(0)
+
+
+```
+
+
+# Applications {background-color="#40666e"}
+
+## Canonical datasets
+
+### Well log
+
+```{python, include = TRUE, echo = FALSE}
+import pandas as pd
+
+well_log = pd.read_csv("../Datasets/well_log.csv")
+
+well_log["x"].plot();
+
+
+```
+
+## Canonical datasets
+
+### Dow Jones Industrial Average
+
+```{python, include = TRUE, echo = FALSE}
+
+dow_jones = pd.read_csv("../Datasets/DJA.csv")
+
+dow_jones["Date"] = pd.to_datetime(dow_jones["Date"])
+dow_jones["DJIA"].astype(float)
+
+dow_jones["Daily returns"] = np.append([np.nan], np.diff(dow_jones["DJIA"]))
+
+dow_jones.plot(x = "Date", y = "Daily returns");
+```
+
+## Application in risk monitoring in Finance
+
+## Other possible examples of applications
+
+## Useful libraries, package and repository
+
+#### In R
+
+- `mcp`
+- `segmented`
+
+#### In Python
+- `ruptures`
+- `changepoynt`
+
+#### Useful GitHub repositories
+
+[https://github.com/gwgundersen/bocd](https://github.com/gwgundersen/bocd)
+[https://github.com/alan-turing-institute/TCPD/tree/master](https://github.com/alan-turing-institute/TCPD/tree/master) 
+
+## References
+
+### Code and presentation
+
+[GitHub repository](https://github.com/EtienneCap/ChangepointDetection)
+
+### Textbooks and articles
+
+::: {#refs}
+:::
