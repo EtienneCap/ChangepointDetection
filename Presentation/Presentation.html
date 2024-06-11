@@ -834,7 +834,7 @@ Q_{\tau, \lambda} + c_{\tau+1:t}(X_{1:n}) + a &gt; Q_t, \quad \text{for some } a
 <section id="bayesian-approach" class="slide level2">
 <h2>Bayesian approach</h2>
 <h3 id="bayesian-online-changepoint-detection">Bayesian online changepoint detection</h3>
-<p>This method, based on <span class="citation" data-cites="adams_bayesian_2007">Adams and MacKay (<a href="#/references" role="doc-biblioref" onclick="">2007</a>)</span>, adopts a Bayesian approach to compute the posterior probability distribution of the “run length” <span class="math inline">\(r_t\)</span> (i.e.&nbsp;the time after the last change point):</p>
+<p>This method, based on <span class="citation" data-cites="fearnhead_-line_2007">Fearnhead and Liu (<a href="#/references" role="doc-biblioref" onclick="">2007</a>)</span> and <span class="citation" data-cites="adams_bayesian_2007">Adams and MacKay (<a href="#/references" role="doc-biblioref" onclick="">2007</a>)</span>, adopts a Bayesian approach to compute the posterior probability distribution of the “run length” <span class="math inline">\(r_t\)</span> (i.e.&nbsp;the time after the last change point):</p>
 <p><span class="math display">\[
 r_t=\begin{cases}
             0, &amp; \text{if $t$ is a changepoint}\\
@@ -902,7 +902,7 @@ p(r_t | X_{1:t}) = \frac{p(r_t, X_{1:t})}{\sum_{r_{t'}} p(r_{t'}, X_{1:t})}
 <div class="quarto-figure quarto-figure-center">
 <figure>
 <p><img data-src="Presentation_files/figure-revealjs/cell-6-output-1.png" width="792" height="411"></p>
-<figcaption>Example of variance changepoint dataset. Between the 2 changepoint, the variance is 3 times higher than the rest of the series.</figcaption>
+<figcaption>Example of variance changepoint dataset. Between the 2 changepoints, the variance is 3 times higher than the rest of the series.</figcaption>
 </figure>
 </div>
 </div>
@@ -972,7 +972,7 @@ p(r_t | X_{1:t}) = \frac{p(r_t, X_{1:t})}{\sum_{r_{t'}} p(r_{t'}, X_{1:t})}
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="Presentation_files/figure-revealjs/cell-8-output-1.png" width="962" height="542"></p>
+<p><img data-src="Presentation_files/figure-revealjs/cell-8-output-1.png" width="967" height="542"></p>
 <figcaption>Result of the BOCD algorithm on the variance changepoint dataset.</figcaption>
 </figure>
 </div>
@@ -992,7 +992,7 @@ p(r_t | X_{1:t}) = \frac{p(r_t, X_{1:t})}{\sum_{r_{t'}} p(r_{t'}, X_{1:t})}
 </div>
 <div class="callout-content">
 <p>Note that the inferred variance seem to do great at the beginning, but then lacks reactivity. This is beacause of the online nature of the BOCD algorithm: at every time-step it keeps memory of what happened in the past, and the longer the past is, the stronger the memory gets.</p>
-<p>To prevent that, the <em>restarted</em> BOCD algorithm was developed by <span class="citation" data-cites="restarted_alami_2020">Alami, Maillard, and Feraud (<a href="#/references" role="doc-biblioref" onclick="">2020</a>)</span> which restarts all over again every time a changepoint is detected.</p>
+<p>A starting point to try to prevent this problem is could be to restart the algorithm all over again when a changepoint is detected. See <span class="citation" data-cites="restarted_alami_2020">Alami, Maillard, and Feraud (<a href="#/references" role="doc-biblioref" onclick="">2020</a>)</span> for a complete application on Bernoulli random variables.</p>
 </div>
 </div>
 </div>
@@ -1016,7 +1016,7 @@ p(r_t | X_{1:t}) = \frac{p(r_t, X_{1:t})}{\sum_{r_{t'}} p(r_{t'}, X_{1:t})}
 <h2>Other possible examples of applications</h2>
 <h3 id="retrospective-analysis-of-gdp-growth-1">Retrospective analysis of GDP growth</h3>
 <div class="cell" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="im">import</span> ruptures <span class="im">as</span> rpt</span>
+<div class="sourceCode cell-code" id="cb2" data-code-line-numbers="|1|10-11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="im">import</span> ruptures <span class="im">as</span> rpt</span>
 <span id="cb2-2"><a href="#cb2-2"></a></span>
 <span id="cb2-3"><a href="#cb2-3"></a>data <span class="op">=</span> pd.read_csv(<span class="st">"../Datasets/gdp.csv"</span>)</span>
 <span id="cb2-4"><a href="#cb2-4"></a></span>
@@ -1026,17 +1026,7 @@ p(r_t | X_{1:t}) = \frac{p(r_t, X_{1:t})}{\sum_{r_{t'}} p(r_{t'}, X_{1:t})}
 <span id="cb2-8"><a href="#cb2-8"></a>growth_data <span class="op">=</span> np.array(country_gdp[<span class="st">'Growth'</span>])[<span class="dv">1</span>:]<span class="op">*</span><span class="dv">100</span></span>
 <span id="cb2-9"><a href="#cb2-9"></a></span>
 <span id="cb2-10"><a href="#cb2-10"></a>algo <span class="op">=</span> rpt.Pelt(model <span class="op">=</span> <span class="st">"l1"</span>, min_size <span class="op">=</span> <span class="dv">2</span>).fit(growth_data)</span>
-<span id="cb2-11"><a href="#cb2-11"></a>changepoints <span class="op">=</span> algo.predict(pen <span class="op">=</span> np.log(<span class="bu">len</span>(growth_data)))</span>
-<span id="cb2-12"><a href="#cb2-12"></a></span>
-<span id="cb2-13"><a href="#cb2-13"></a></span>
-<span id="cb2-14"><a href="#cb2-14"></a>plt.figure(figsize <span class="op">=</span> (<span class="dv">12</span>, <span class="dv">5</span>))</span>
-<span id="cb2-15"><a href="#cb2-15"></a>plt.plot(np.array(country_gdp[<span class="st">"Year"</span>], dtype <span class="op">=</span> <span class="bu">float</span>)[<span class="dv">1</span>:], growth_data, label <span class="op">=</span> <span class="st">"USA"</span>)</span>
-<span id="cb2-16"><a href="#cb2-16"></a>plt.vlines([np.array(country_gdp[<span class="st">"Year"</span>], dtype <span class="op">=</span> <span class="bu">float</span>)[<span class="dv">1</span>:][i] <span class="cf">for</span> i <span class="kw">in</span> changepoints[:<span class="op">-</span><span class="dv">1</span>]], linestyle <span class="op">=</span> <span class="st">"dashed"</span>, color <span class="op">=</span> <span class="st">'r'</span>, linewidth <span class="op">=</span> <span class="fl">0.5</span>, ymin <span class="op">=</span> <span class="fl">1.1</span><span class="op">*</span><span class="bu">min</span>(growth_data), ymax <span class="op">=</span> <span class="fl">1.1</span><span class="op">*</span><span class="bu">max</span>(growth_data))</span>
-<span id="cb2-17"><a href="#cb2-17"></a>plt.xticks(rotation <span class="op">=</span> <span class="dv">45</span>)<span class="op">;</span></span>
-<span id="cb2-18"><a href="#cb2-18"></a>plt.ylim((<span class="fl">1.05</span><span class="op">*</span><span class="bu">min</span>(growth_data), <span class="fl">1.05</span><span class="op">*</span><span class="bu">max</span>(growth_data)))<span class="op">;</span></span>
-<span id="cb2-19"><a href="#cb2-19"></a>plt.xlabel(<span class="st">"Year"</span>)</span>
-<span id="cb2-20"><a href="#cb2-20"></a>plt.legend()</span>
-<span id="cb2-21"><a href="#cb2-21"></a>plt.ylabel(<span class="st">"GDP growth (%)"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-11"><a href="#cb2-11"></a>changepoints <span class="op">=</span> algo.predict(pen <span class="op">=</span> np.log(<span class="bu">len</span>(growth_data)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="useful-libraries-package-and-repository" class="slide level2">
@@ -1074,6 +1064,9 @@ Fearnhead, Paul, and Piotr Fryzlewicz. 2022. <span>“Detecting <span>A</span> <
 </div>
 <div id="ref-fearnhead_multiple_2024" class="csl-entry" role="listitem">
 ———. 2024. <span>“The <span>Multiple</span> <span>Change</span>-in-<span>Gaussian</span>-<span>Mean</span> <span>Problem</span>.”</span> arXiv. <a href="http://arxiv.org/abs/2405.06796">http://arxiv.org/abs/2405.06796</a>.
+</div>
+<div id="ref-fearnhead_-line_2007" class="csl-entry" role="listitem">
+Fearnhead, Paul, and Zhen Liu. 2007. <span>“On-Line Inference for Multiple Changepoint Problems.”</span> <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em> 69 (4): 589–605. <a href="https://doi.org/10.1111/j.1467-9868.2007.00601.x">https://doi.org/10.1111/j.1467-9868.2007.00601.x</a>.
 </div>
 <div id="ref-feasel_finding_2022" class="csl-entry" role="listitem">
 Feasel, Kevin. 2022. <em>Finding <span>Ghosts</span> in <span>Your</span> <span>Data</span>: <span>Anomaly</span> <span>Detection</span> <span>Techniques</span> with <span>Examples</span> in <span>Python</span></em>. Berkeley, CA: Apress. <a href="https://doi.org/10.1007/978-1-4842-8870-2">https://doi.org/10.1007/978-1-4842-8870-2</a>.

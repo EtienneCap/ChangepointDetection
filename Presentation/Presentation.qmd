@@ -414,7 +414,7 @@ It has been proven that if the number of changepoint linearly increases with the
 
 ### Bayesian online changepoint detection
 
-This method, based on @adams_bayesian_2007, adopts a Bayesian approach to compute the posterior probability distribution of the "run length" $r_t$ (i.e. the time after the last change point):
+This method, based on @fearnhead_-line_2007 and @adams_bayesian_2007, adopts a Bayesian approach to compute the posterior probability distribution of the "run length" $r_t$ (i.e. the time after the last change point):
 
 $$
 r_t=\begin{cases}
@@ -573,7 +573,7 @@ To monitor financial markets and potentially take action to protect financial st
 
 #| echo: false
 #| include: true
-#| fig-cap: "Example of variance changepoint dataset. Between the 2 changepoint, the variance is 3 times higher than the rest of the series."
+#| fig-cap: "Example of variance changepoint dataset. Between the 2 changepoints, the variance is 3 times higher than the rest of the series."
 
 
 mu = 0
@@ -699,8 +699,7 @@ ax[1].margins(0);
 ## Remarks
 Note that the inferred variance seem to do great at the beginning, but then lacks reactivity. This is beacause of the online nature of the BOCD algorithm: at every time-step it keeps memory of what happened in the past, and the longer the past is, the stronger the memory gets.
 
-To prevent that, the *restarted* BOCD algorithm was developed by @restarted_alami_2020 which restarts all over again every time a changepoint is detected.
-
+A starting point to try to prevent this problem is could be to restart the algorithm all over again when a changepoint is detected. See @restarted_alami_2020 for a complete application on Bernoulli random variables.
 :::
 
 ## Other possible examples of applications
@@ -738,7 +737,6 @@ plt.ylabel("GDP growth (%)");
 ```
 
 
-
 ## Other possible examples of applications
 
 ### Retrospective analysis of GDP growth
@@ -746,6 +744,7 @@ plt.ylabel("GDP growth (%)");
 ```{python}
 #| eval: false
 #| echo: true
+#| code-line-numbers: "|1|10-11"
 
 import ruptures as rpt
 
@@ -758,18 +757,7 @@ growth_data = np.array(country_gdp['Growth'])[1:]*100
 
 algo = rpt.Pelt(model = "l1", min_size = 2).fit(growth_data)
 changepoints = algo.predict(pen = np.log(len(growth_data)))
-
-
-plt.figure(figsize = (12, 5))
-plt.plot(np.array(country_gdp["Year"], dtype = float)[1:], growth_data, label = "USA")
-plt.vlines([np.array(country_gdp["Year"], dtype = float)[1:][i] for i in changepoints[:-1]], linestyle = "dashed", color = 'r', linewidth = 0.5, ymin = 1.1*min(growth_data), ymax = 1.1*max(growth_data))
-plt.xticks(rotation = 45);
-plt.ylim((1.05*min(growth_data), 1.05*max(growth_data)));
-plt.xlabel("Year")
-plt.legend()
-plt.ylabel("GDP growth (%)");
 ```
-
 
 ## Useful libraries, package and repository
 
